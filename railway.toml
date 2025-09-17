@@ -3,8 +3,13 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "python run.py"
+healthcheckPath = "/"
+healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-[environments.production]
-variables = { PORT = "8000" }
+[environments.production.variables]
+BOT_TOKEN = "7576082688:AAGJz-v5NG8QGKCezBA5qlhI3lYiatsgRd8"
+DOWNLOAD_DIR = "downloads"
+MAX_FILE_SIZE = "52428800"
+NIXPACKS_CONFIG = "nixpacks.toml"

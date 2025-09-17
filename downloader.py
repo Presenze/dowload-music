@@ -16,7 +16,7 @@ class DownloadManager:
         # yt-dlp configuration - VELOCITÀ MASSIMA + QUALITÀ + RAILWAY COMPATIBLE
         self.ydl_opts = {
             'outtmpl': os.path.join(self.download_dir, '%(title)s.%(ext)s'),
-            'format': 'best[height<=720]/best[height<=480]/worst',
+            'format': 'worst[height<=480]/worst',  # Use worst quality to avoid auth
             'noplaylist': True,
             'extract_flat': False,
             'no_warnings': True,
@@ -26,16 +26,16 @@ class DownloadManager:
             'extractor_retries': 1,
             'fragment_retries': 1,
             'retries': 1,
-            'socket_timeout': 10,  # Timeout aumentato per Railway
+            'socket_timeout': 15,  # Timeout aumentato per Railway
             'http_chunk_size': 1048576,  # Chunk 1MB per Railway
-            'concurrent_fragment_downloads': 4,  # 4 download paralleli per Railway
+            'concurrent_fragment_downloads': 2,  # Ridotto per Railway
             'fragment_retries': 1,  # 1 retry per stabilità
             'skip_unavailable_fragments': True,
             # Railway specific settings
             'prefer_insecure': False,
             'geo_bypass': True,
             'geo_bypass_country': 'US',
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'user_agent': 'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Mobile Safari/537.36',
             # FFmpeg settings for Railway
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Railway FFmpeg path
             'merge_output_format': 'mp4',  # Force MP4 output
@@ -43,9 +43,9 @@ class DownloadManager:
             'cookiesfrombrowser': None,  # Disable cookies
             'extractor_args': {
                 'youtube': {
-                    'skip': ['dash', 'hls'],  # Skip problematic formats
+                    'skip': ['dash', 'hls', 'translated_subs'],  # Skip problematic formats
                     'player_skip': ['webpage'],
-                    'player_client': ['android', 'web'],  # Use mobile client
+                    'player_client': ['android'],  # Only mobile client
                 }
             },
         }
@@ -70,15 +70,15 @@ class DownloadManager:
                     'no_warnings': True,
                     'writethumbnail': False,
                     'writeinfojson': False,
-                    'format': 'best[height<=720]/best[height<=480]/worst',
+                    'format': 'worst[height<=480]/worst',  # Use worst quality to avoid auth
                     'merge_output_format': 'mp4',
                     # YouTube bypass settings
                     'cookiesfrombrowser': None,
                     'extractor_args': {
                         'youtube': {
-                            'skip': ['dash', 'hls'],
+                            'skip': ['dash', 'hls', 'translated_subs'],
                             'player_skip': ['webpage'],
-                            'player_client': ['android', 'web'],
+                            'player_client': ['android'],  # Only mobile client
                         }
                     },
                 })

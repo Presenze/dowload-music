@@ -1,0 +1,22 @@
+# yt-dlp configuration for Railway
+# This file contains settings to bypass YouTube authentication
+
+# Use mobile client to avoid authentication
+--extractor-args youtube:player_client=android
+
+# Skip problematic formats that require authentication
+--extractor-args youtube:skip=dash,hls,translated_subs
+
+# Use worst quality to avoid auth requirements
+--format worst[height<=480]/worst
+
+# Disable cookies
+--no-cookies
+
+# Merge output format
+--merge-output-format mp4
+
+# Other settings
+--no-warnings
+--ignore-errors
+--no-playlist
