@@ -1,0 +1,4 @@
+v2.0.0 - Clean Requirements Fix
+- Removed ALL problematic packages
+- Railway compatible requirements only
+- YouTube Revolution Bypass active
