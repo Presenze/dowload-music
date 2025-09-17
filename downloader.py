@@ -36,6 +36,9 @@ class DownloadManager:
             'geo_bypass': True,
             'geo_bypass_country': 'US',
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            # FFmpeg settings for Railway
+            'ffmpeg_location': '/usr/bin/ffmpeg',  # Railway FFmpeg path
+            'merge_output_format': 'mp4',  # Force MP4 output
         }
     
     async def get_download_options(self, url: str, platform: str) -> List[Dict]:
