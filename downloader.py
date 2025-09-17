@@ -39,6 +39,15 @@ class DownloadManager:
             # FFmpeg settings for Railway
             'ffmpeg_location': '/usr/bin/ffmpeg',  # Railway FFmpeg path
             'merge_output_format': 'mp4',  # Force MP4 output
+            # YouTube authentication bypass
+            'cookiesfrombrowser': None,  # Disable cookies
+            'extractor_args': {
+                'youtube': {
+                    'skip': ['dash', 'hls'],  # Skip problematic formats
+                    'player_skip': ['webpage'],
+                    'player_client': ['android', 'web'],  # Use mobile client
+                }
+            },
         }
     
     async def get_download_options(self, url: str, platform: str) -> List[Dict]:
@@ -54,7 +63,7 @@ class DownloadManager:
             
             # YouTube specific handling
             if 'youtube.com' in url or 'youtu.be' in url:
-                # Add YouTube specific options
+                # Add YouTube specific options with authentication bypass
                 opts = self.ydl_opts.copy()
                 opts.update({
                     'extract_flat': False,
@@ -63,6 +72,15 @@ class DownloadManager:
                     'writeinfojson': False,
                     'format': 'best[height<=720]/best[height<=480]/worst',
                     'merge_output_format': 'mp4',
+                    # YouTube bypass settings
+                    'cookiesfrombrowser': None,
+                    'extractor_args': {
+                        'youtube': {
+                            'skip': ['dash', 'hls'],
+                            'player_skip': ['webpage'],
+                            'player_client': ['android', 'web'],
+                        }
+                    },
                 })
             else:
                 opts = self.ydl_opts.copy()
@@ -202,6 +220,38 @@ class DownloadManager:
             logger.error(f"Error getting download options: {e}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
+            
+            # Special handling for YouTube authentication errors
+            if 'Sign in to confirm' in str(e) or 'cookies' in str(e).lower():
+                logger.info("YouTube authentication required, trying alternative method...")
+                # Try with different YouTube client
+                try:
+                    alt_opts = self.ydl_opts.copy()
+                    alt_opts.update({
+                        'extract_flat': False,
+                        'no_warnings': True,
+                        'format': 'worst',  # Use worst quality to avoid auth
+                        'extractor_args': {
+                            'youtube': {
+                                'player_client': ['android'],  # Only mobile client
+                                'skip': ['dash', 'hls', 'translated_subs'],
+                            }
+                        },
+                    })
+                    
+                    with yt_dlp.YoutubeDL(alt_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                        if info:
+                            return [{
+                                'format_id': 'worst',
+                                'format': '🎵 Audio/Video (Qualità Base)',
+                                'size': 'Qualità base',
+                                'ext': 'mp4',
+                                'type': 'video'
+                            }]
+                except:
+                    pass
+            
             # Return default options on error
             return [
                 {
