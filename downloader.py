@@ -56,36 +56,39 @@ class DownloadManager:
                     
                     for fmt in info['formats']:
                         if fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none':  # Video + Audio
+                            height = fmt.get('height') or 0
                             video_formats.append({
                                 'format_id': fmt['format_id'],
-                                'format': f"🎥 Video {fmt.get('height', 'Unknown')}p",
+                                'format': f"🎥 Video {height if height > 0 else 'Unknown'}p",
                                 'size': self._format_size(fmt.get('filesize', 0)),
                                 'ext': fmt.get('ext', 'mp4'),
                                 'type': 'video',
-                                'quality': fmt.get('height', 0)
+                                'quality': height
                             })
                         elif fmt.get('vcodec') != 'none':  # Video only
+                            height = fmt.get('height') or 0
                             video_formats.append({
                                 'format_id': fmt['format_id'],
-                                'format': f"🎬 Video {fmt.get('height', 'Unknown')}p (no audio)",
+                                'format': f"🎬 Video {height if height > 0 else 'Unknown'}p (no audio)",
                                 'size': self._format_size(fmt.get('filesize', 0)),
                                 'ext': fmt.get('ext', 'mp4'),
                                 'type': 'video_only',
-                                'quality': fmt.get('height', 0)
+                                'quality': height
                             })
                         elif fmt.get('acodec') != 'none':  # Audio only
+                            abr = fmt.get('abr') or 0
                             audio_formats.append({
                                 'format_id': fmt['format_id'],
-                                'format': f"🎵 Audio {fmt.get('abr', 'Unknown')}kbps",
+                                'format': f"🎵 Audio {abr if abr > 0 else 'Unknown'}kbps",
                                 'size': self._format_size(fmt.get('filesize', 0)),
                                 'ext': fmt.get('ext', 'mp3'),
                                 'type': 'audio',
-                                'quality': fmt.get('abr', 0)
+                                'quality': abr
                             })
                     
                     # Sort by quality (highest first) - gestisci None values
-                    video_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
-                    audio_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
+                    video_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
+                    audio_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
                     
                     # Add best options first
                     options.extend(video_formats[:5])  # Top 5 video formats
@@ -168,6 +171,8 @@ class DownloadManager:
                 
         except Exception as e:
             logger.error(f"Error getting download options: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return []
     
     async def download_file(self, url: str, option: Dict, user_id: int) -> Optional[str]:
@@ -273,7 +278,7 @@ class DownloadManager:
     
     def _format_size(self, size_bytes: int) -> str:
         """Format file size in human readable format"""
-        if size_bytes == 0:
+        if size_bytes is None or size_bytes == 0:
             return "Unknown size"
         
         size_names = ["B", "KB", "MB", "GB"]
