@@ -61,27 +61,12 @@ class DownloadManager:
             if platform == 'generic':
                 return await self.get_generic_download_options(url)
             
-            # YouTube specific handling
+            # YouTube specific handling - Use alternative method
             if 'youtube.com' in url or 'youtu.be' in url:
-                # Add YouTube specific options with authentication bypass
-                opts = self.ydl_opts.copy()
-                opts.update({
-                    'extract_flat': False,
-                    'no_warnings': True,
-                    'writethumbnail': False,
-                    'writeinfojson': False,
-                    'format': 'worst[height<=480]/worst',  # Use worst quality to avoid auth
-                    'merge_output_format': 'mp4',
-                    # YouTube bypass settings
-                    'cookiesfrombrowser': None,
-                    'extractor_args': {
-                        'youtube': {
-                            'skip': ['dash', 'hls', 'translated_subs'],
-                            'player_skip': ['webpage'],
-                            'player_client': ['android'],  # Only mobile client
-                        }
-                    },
-                })
+                # Use YouTube fix for better bypass
+                from youtube_fix import YouTubeFix
+                youtube_fix = YouTubeFix()
+                return await youtube_fix.get_download_options(url)
             else:
                 opts = self.ydl_opts.copy()
                 opts['extract_flat'] = False
