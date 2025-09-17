@@ -53,6 +53,13 @@ requests-html==0.10.0
 beautifulsoup4==4.12.2
 lxml==4.9.3
 
+# Revolutionary Bypass Packages
+cloudscraper==1.2.71
+curl-cffi==0.5.10
+httpx-socks==0.8.4
+pycurl==7.45.2
+urllib3[socks]==2.1.0
+
 # Optional: FFmpeg Python wrapper (if needed)
 # ffmpeg-python==0.2.0
 
