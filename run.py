@@ -7,7 +7,7 @@ Main entry point for running the bot
 import os
 import sys
 import logging
-from bot import GiglioDownloadBot
+from professional_bot import ProfessionalBot
 from config import BOT_TOKEN
 
 def main():
@@ -36,7 +36,7 @@ def main():
     
     try:
         # Create and run bot
-        bot = GiglioDownloadBot()
+        bot = ProfessionalBot()
         bot.run()
     except KeyboardInterrupt:
         logger.info("Bot stopped by user")
