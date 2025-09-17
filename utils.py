@@ -6,9 +6,14 @@ def detect_platform(url: str) -> Optional[str]:
     """Detect platform from URL"""
     url_lower = url.lower()
     
+    # First check known platforms
     for platform, domains in SUPPORTED_PLATFORMS.items():
         if any(domain in url_lower for domain in domains):
             return platform
+    
+    # If it's a valid URL but unknown platform, return 'generic'
+    if is_valid_url(url):
+        return 'generic'
     
     return None
 

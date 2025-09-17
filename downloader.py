@@ -13,7 +13,7 @@ class DownloadManager:
         self.download_dir = DOWNLOAD_DIR
         os.makedirs(self.download_dir, exist_ok=True)
         
-        # yt-dlp configuration - VELOCITÀ MASSIMA + QUALITÀ
+        # yt-dlp configuration - VELOCITÀ MASSIMA + QUALITÀ + RAILWAY COMPATIBLE
         self.ydl_opts = {
             'outtmpl': os.path.join(self.download_dir, '%(title)s.%(ext)s'),
             'format': 'best[height<=720]/best[height<=480]/worst',
@@ -26,11 +26,16 @@ class DownloadManager:
             'extractor_retries': 1,
             'fragment_retries': 1,
             'retries': 1,
-            'socket_timeout': 5,  # Timeout ultra-breve
-            'http_chunk_size': 2097152,  # Chunk 2MB per velocità
-            'concurrent_fragment_downloads': 8,  # 8 download paralleli
-            'fragment_retries': 0,  # Nessun retry per velocità
+            'socket_timeout': 10,  # Timeout aumentato per Railway
+            'http_chunk_size': 1048576,  # Chunk 1MB per Railway
+            'concurrent_fragment_downloads': 4,  # 4 download paralleli per Railway
+            'fragment_retries': 1,  # 1 retry per stabilità
             'skip_unavailable_fragments': True,
+            # Railway specific settings
+            'prefer_insecure': False,
+            'geo_bypass': True,
+            'geo_bypass_country': 'US',
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         }
     
     async def get_download_options(self, url: str, platform: str) -> List[Dict]:
@@ -40,7 +45,28 @@ class DownloadManager:
             if 'music.youtube.com' in url:
                 url = url.replace('music.youtube.com', 'www.youtube.com')
             
-            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+            # For generic URLs, try to download directly first
+            if platform == 'generic':
+                return await self.get_generic_download_options(url)
+            
+            # YouTube specific handling
+            if 'youtube.com' in url or 'youtu.be' in url:
+                # Add YouTube specific options
+                opts = self.ydl_opts.copy()
+                opts.update({
+                    'extract_flat': False,
+                    'no_warnings': True,
+                    'writethumbnail': False,
+                    'writeinfojson': False,
+                    'format': 'best[height<=720]/best[height<=480]/worst',
+                    'merge_output_format': 'mp4',
+                })
+            else:
+                opts = self.ydl_opts.copy()
+                opts['extract_flat'] = False
+                opts['no_warnings'] = True
+            
+            with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 
                 if not info:
@@ -216,7 +242,10 @@ class DownloadManager:
             ydl_opts = self.ydl_opts.copy()
             ydl_opts['outtmpl'] = os.path.join(user_dir, '%(title)s.%(ext)s')
             
-            if option['type'] == 'video_only':
+            if option['type'] == 'direct':
+                # Direct download without yt-dlp
+                return await self.download_from_url(url, user_id)
+            elif option['type'] == 'video_only':
                 ydl_opts['format'] = f"{option['format_id']}+bestaudio"
             elif option['type'] == 'audio':
                 ydl_opts['format'] = option['format_id']
@@ -336,3 +365,73 @@ class DownloadManager:
             filename = f"download_{hash(url)}.bin"
         
         return filename
+    
+    async def get_generic_download_options(self, url: str) -> List[Dict]:
+        """Get download options for generic URLs"""
+        try:
+            # Try to extract info with yt-dlp first
+            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                
+                if info:
+                    options = []
+                    
+                    # Check if it's a video/audio content
+                    if 'formats' in info:
+                        # Process formats like YouTube
+                        video_formats = []
+                        audio_formats = []
+                        
+                        for fmt in info['formats']:
+                            if fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none':  # Video + Audio
+                                height = fmt.get('height') or 0
+                                video_formats.append({
+                                    'format_id': fmt['format_id'],
+                                    'format': f"🎥 Video {height if height > 0 else 'Unknown'}p",
+                                    'size': self._format_size(fmt.get('filesize', 0)),
+                                    'ext': fmt.get('ext', 'mp4'),
+                                    'type': 'video',
+                                    'quality': height
+                                })
+                            elif fmt.get('acodec') != 'none':  # Audio only
+                                abr = fmt.get('abr') or 0
+                                audio_formats.append({
+                                    'format_id': fmt['format_id'],
+                                    'format': f"🎵 Audio {abr if abr > 0 else 'Unknown'}kbps",
+                                    'size': self._format_size(fmt.get('filesize', 0)),
+                                    'ext': fmt.get('ext', 'mp3'),
+                                    'type': 'audio',
+                                    'quality': abr
+                                })
+                        
+                        # Sort by quality
+                        video_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
+                        audio_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
+                        
+                        options.extend(video_formats[:5])
+                        options.extend(audio_formats[:3])
+                    
+                    if options:
+                        return options[:12]
+                
+                # If yt-dlp can't handle it, try direct download
+                return [{
+                    'format_id': 'direct',
+                    'format': '🔗 Download Diretto',
+                    'size': 'Sconosciuto',
+                    'ext': 'bin',
+                    'type': 'direct',
+                    'quality': 0
+                }]
+                
+        except Exception as e:
+            logger.error(f"Error with generic URL: {e}")
+            # Fallback to direct download
+            return [{
+                'format_id': 'direct',
+                'format': '🔗 Download Diretto',
+                'size': 'Sconosciuto',
+                'ext': 'bin',
+                'type': 'direct',
+                'quality': 0
+            }]

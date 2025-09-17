@@ -1,11 +1,12 @@
 import os
+import re
 import logging
 import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from config import BOT_TOKEN, MESSAGES, SUPPORTED_PLATFORMS, MAX_FILE_SIZE
 from downloader import DownloadManager
-from utils import detect_platform, get_file_type, format_file_size
+from utils import detect_platform, get_file_type, format_file_size, is_valid_url
 
 # Configure logging
 logging.basicConfig(
@@ -17,6 +18,19 @@ logger = logging.getLogger(__name__)
 class GiglioDownloadBot:
     def __init__(self):
         self.download_manager = DownloadManager()
+    
+    def is_url(self, text: str) -> bool:
+        """Check if text contains a valid URL"""
+        # Check for URLs in the text
+        url_pattern = re.compile(
+            r'https?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+            r'localhost|'  # localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)?', re.IGNORECASE)
+        
+        return url_pattern.search(text) is not None
         
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
@@ -51,8 +65,8 @@ class GiglioDownloadBot:
         message = update.message
         lang = context.user_data.get('language', 'en')
         
-        # Check if message contains a URL
-        if message.text and any(platform in message.text.lower() for platform in SUPPORTED_PLATFORMS):
+        # Check if message contains a URL (any valid URL)
+        if message.text and self.is_url(message.text):
             await self.handle_url(message, context, lang)
         elif message.document or message.photo or message.video or message.audio:
             await self.handle_file(message, context, lang)

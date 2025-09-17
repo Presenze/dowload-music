@@ -28,6 +28,9 @@ asyncio-mqtt==0.16.1
 # Logging and Utilities
 colorama==0.4.6
 
+# FFmpeg for Railway (alternative)
+ffmpeg-python==0.2.0
+
 # Optional: FFmpeg Python wrapper (if needed)
 # ffmpeg-python==0.2.0
 
