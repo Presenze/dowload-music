@@ -1,51 +1,26 @@
 # Core Bot Framework
 python-telegram-bot==20.7
 
-# Download Engine - Updated to latest
+# Download Engine
 yt-dlp==2025.9.5
 
-# HTTP and Async Support
+# HTTP Support
 requests==2.31.0
 aiohttp==3.9.1
-httpx==0.25.2
 
-# Image Processing
-Pillow==10.1.0
-
-# Configuration Management
+# Configuration
 python-dotenv==1.0.0
 
-# Audio/Video Processing (for MP3 conversion)
+# Audio/Video Processing
 mutagen==1.47.0
-pycryptodomex==3.23.0
 
-# Compression and Encoding
-brotli==1.1.0
-
-# Async Support
-asyncio-mqtt==0.16.1
-
-# Logging and Utilities
+# Logging
 colorama==0.4.6
 
-# FFmpeg for Railway (alternative)
-ffmpeg-python==0.2.0
-
-# YouTube Bypass Packages (Railway Compatible)
+# YouTube Bypass (Essential only)
 cryptography==41.0.7
 certifi==2023.11.17
 urllib3==2.1.0
-websockets==12.0
 
-# Additional YouTube Support (Railway Compatible)
-pycryptodome==3.19.0
-
-# Network and Security (Railway Compatible)
+# Network
 fake-useragent==1.4.0
-
-# Ultra Bypass Packages (Railway Compatible)
-beautifulsoup4==4.12.2
-lxml==4.9.3
-
-# Revolutionary Bypass Packages (Railway Compatible)
-cloudscraper==1.2.71
