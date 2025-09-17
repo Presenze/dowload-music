@@ -17,7 +17,7 @@ DOWNLOAD_DIR = "downloads"
 
 # Supported platforms
 SUPPORTED_PLATFORMS = {
-    'youtube': ['youtube.com', 'youtu.be'],
+    'youtube': ['youtube.com', 'youtu.be', 'music.youtube.com'],
     'instagram': ['instagram.com'],
     'tiktok': ['tiktok.com', 'vm.tiktok.com'],
     'twitter': ['twitter.com', 'x.com'],

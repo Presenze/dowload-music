@@ -6,6 +6,10 @@ def detect_platform(url: str) -> Optional[str]:
     """Detect platform from URL"""
     url_lower = url.lower()
     
+    # Special handling for YouTube URLs with parameters
+    if 'youtube.com' in url_lower or 'youtu.be' in url_lower or 'music.youtube.com' in url_lower:
+        return 'youtube'
+    
     # First check known platforms
     for platform, domains in SUPPORTED_PLATFORMS.items():
         if any(domain in url_lower for domain in domains):
@@ -45,13 +49,14 @@ def format_file_size(size_bytes: int) -> str:
 
 def is_valid_url(url: str) -> bool:
     """Check if URL is valid"""
+    # More flexible URL pattern that handles parameters and fragments
     url_pattern = re.compile(
         r'^https?://'  # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
         r'localhost|'  # localhost...
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
         r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        r'(?:/?|[/?].*)?$', re.IGNORECASE)  # Allow any path and parameters
     
     return url_pattern.match(url) is not None
 
