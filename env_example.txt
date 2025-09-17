@@ -1,0 +1,8 @@
+# Telegram Bot Token
+BOT_TOKEN=your_bot_token_here
+
+# Optional: Set download directory
+DOWNLOAD_DIR=downloads
+
+# Optional: Set max file size (in bytes)
+MAX_FILE_SIZE=52428800

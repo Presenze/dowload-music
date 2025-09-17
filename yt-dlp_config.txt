@@ -1,0 +1,62 @@
+# Configurazione avanzata yt-dlp per Giglio Download Bot
+# Questo file può essere usato per personalizzare ulteriormente yt-dlp
+
+# Formati preferiti (in ordine di priorità)
+--format-sort
+--format-sort-args
+--format-sort-force
+
+# Qualità video preferita
+--format
+best[height<=720]/best[height<=480]/worst
+
+# Audio preferito
+--audio-format
+mp3
+--audio-quality
+0
+
+# Configurazioni di rete
+--socket-timeout
+5
+--http-chunk-size
+2097152
+--concurrent-fragment-downloads
+8
+
+# Configurazioni di output
+--output
+downloads/%(title)s.%(ext)s
+--no-playlist
+--extract-flat
+false
+
+# Configurazioni di qualità
+--write-thumbnail
+false
+--write-info-json
+false
+--write-description
+false
+--write-annotations
+false
+
+# Configurazioni di retry
+--retries
+1
+--fragment-retries
+0
+--extractor-retries
+1
+
+# Configurazioni di velocità
+--skip-unavailable-fragments
+true
+--ignore-errors
+true
+--no-warnings
+true
+
+# Configurazioni di post-processing
+--postprocessor-args
+ffmpeg:-c:v libx264 -c:a aac -b:a 192k
