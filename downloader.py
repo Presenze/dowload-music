@@ -87,8 +87,8 @@ class DownloadManager:
                             })
                     
                     # Sort by quality (highest first) - gestisci None values
-                    video_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
-                    audio_formats.sort(key=lambda x: x['quality'] if x['quality'] is not None else 0, reverse=True)
+                    video_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
+                    audio_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
                     
                     # Add best options first
                     options.extend(video_formats[:5])  # Top 5 video formats
@@ -173,7 +173,37 @@ class DownloadManager:
             logger.error(f"Error getting download options: {e}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
-            return []
+            # Return default options on error
+            return [
+                {
+                    'format_id': 'best[height<=720]+bestaudio',
+                    'format': '🎬 Video HD + Audio (720p)',
+                    'size': 'Alta qualità',
+                    'ext': 'mp4',
+                    'type': 'video'
+                },
+                {
+                    'format_id': 'best[height<=480]+bestaudio',
+                    'format': '🎥 Video + Audio (480p)',
+                    'size': 'Media qualità',
+                    'ext': 'mp4',
+                    'type': 'video'
+                },
+                {
+                    'format_id': 'bestaudio',
+                    'format': '🎵 MP3 Alta Qualità (320kbps)',
+                    'size': 'Audio premium',
+                    'ext': 'mp3',
+                    'type': 'audio'
+                },
+                {
+                    'format_id': 'worstaudio',
+                    'format': '⚡ MP3 Veloce (128kbps)',
+                    'size': 'Audio veloce',
+                    'ext': 'mp3',
+                    'type': 'audio'
+                }
+            ]
     
     async def download_file(self, url: str, option: Dict, user_id: int) -> Optional[str]:
         """Download file with selected option"""
@@ -249,6 +279,8 @@ class DownloadManager:
             
         except Exception as e:
             logger.error(f"Download error: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return None
     
     async def download_from_url(self, url: str, user_id: int) -> Optional[str]:
