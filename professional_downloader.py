@@ -141,6 +141,12 @@ class ProfessionalDownloader:
             if not platform:
                 return await self._get_generic_options(url)
             
+            # YouTube specific handling - Use advanced bypass
+            if platform == 'youtube':
+                from youtube_bypass import YouTubeBypass
+                youtube_bypass = YouTubeBypass()
+                return await youtube_bypass.get_download_options(url)
+            
             # Usa configurazione specifica per la piattaforma
             return await self._get_platform_options(url, platform)
             

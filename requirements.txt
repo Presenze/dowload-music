@@ -31,6 +31,20 @@ colorama==0.4.6
 # FFmpeg for Railway (alternative)
 ffmpeg-python==0.2.0
 
+# YouTube Bypass Packages
+cryptography==41.0.7
+certifi==2023.11.17
+urllib3==2.1.0
+websockets==12.0
+
+# Additional YouTube Support
+pycryptodome==3.19.0
+pycrypto==2.6.1
+
+# Network and Security
+tls-client==1.0.0
+fake-useragent==1.4.0
+
 # Optional: FFmpeg Python wrapper (if needed)
 # ffmpeg-python==0.2.0
 
