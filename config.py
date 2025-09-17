@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Bot Configuration
-BOT_TOKEN = os.getenv('BOT_TOKEN') or '7576082688:AAGJz-v5NG8QGKCezBA5qlhI3lYiatsgRd8'
+BOT_TOKEN = os.getenv('BOT_TOKEN') or 'TOKEN HERE'
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit for Telegram
 DOWNLOAD_DIR = "downloads"
 
