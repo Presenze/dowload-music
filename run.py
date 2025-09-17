@@ -7,8 +7,28 @@ Main entry point for running the bot
 import os
 import sys
 import logging
+import threading
+import socketserver
+import http.server
 from professional_bot import ProfessionalBot
 from config import BOT_TOKEN
+
+class _HealthHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b'OK')
+
+    def log_message(self, format, *args):
+        return
+
+def _start_health_server():
+    port = int(os.environ.get('PORT', '8080'))
+    server = socketserver.TCPServer(('', port), _HealthHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server
 
 def main():
     """Main function to run the bot"""
@@ -33,6 +53,8 @@ def main():
     
     logger = logging.getLogger(__name__)
     logger.info("🌸 Starting Giglio Download Unlimited Bot...")
+    # Start lightweight HTTP healthcheck server for Railway
+    _start_health_server()
     
     try:
         # Create and run bot
