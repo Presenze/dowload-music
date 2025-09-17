@@ -49,6 +49,7 @@ class ProfessionalDownloader:
             # FFmpeg settings
             'ffmpeg_location': '/usr/bin/ffmpeg',
             'merge_output_format': 'mp4',
+            'prefer_ffmpeg': True,
             # YouTube specific
             'extractor_args': {
                 'youtube': {
@@ -203,6 +204,48 @@ class ProfessionalDownloader:
                         'platform': platform,
                         'ydl_format': quality['format']
                     })
+
+                # Assicurati che le opzioni audio MP3 siano sempre presenti
+                audio_present = any(opt['type'] == 'audio' for opt in options)
+                if not audio_present:
+                    options.extend([
+                        {
+                            'format_id': 'audio_320',
+                            'format': '🎵 MP3 Premium (320kbps)',
+                            'size': f'{duration//60}min' if duration else 'Unknown',
+                            'ext': 'mp3',
+                            'type': 'audio',
+                            'quality': 'audio_320',
+                            'title': title,
+                            'uploader': uploader,
+                            'platform': platform,
+                            'ydl_format': 'bestaudio/best'
+                        },
+                        {
+                            'format_id': 'audio_192',
+                            'format': '🎵 MP3 Qualità (192kbps)',
+                            'size': f'{duration//60}min' if duration else 'Unknown',
+                            'ext': 'mp3',
+                            'type': 'audio',
+                            'quality': 'audio_192',
+                            'title': title,
+                            'uploader': uploader,
+                            'platform': platform,
+                            'ydl_format': 'bestaudio/best'
+                        },
+                        {
+                            'format_id': 'audio_128',
+                            'format': '⚡ MP3 Veloce (128kbps)',
+                            'size': f'{duration//60}min' if duration else 'Unknown',
+                            'ext': 'mp3',
+                            'type': 'audio',
+                            'quality': 'audio_128',
+                            'title': title,
+                            'uploader': uploader,
+                            'platform': platform,
+                            'ydl_format': 'worstaudio/worst'
+                        }
+                    ])
                 
                 return options
                 
@@ -274,10 +317,50 @@ class ProfessionalDownloader:
             opts = self.ydl_opts.copy()
             opts['outtmpl'] = os.path.join(user_dir, '%(title)s.%(ext)s')
             opts['format'] = option.get('ydl_format', 'best')
+
+            # Se audio MP3, forza estrazione con FFmpeg
+            if option.get('type') == 'audio' or option.get('ext') == 'mp3':
+                target_quality = '320'
+                if '192' in option.get('format', ''):
+                    target_quality = '192'
+                elif '128' in option.get('format', ''):
+                    target_quality = '128'
+
+                opts.update({
+                    'format': option.get('ydl_format', 'bestaudio/best'),
+                    'postprocessors': [
+                        {
+                            'key': 'FFmpegExtractAudio',
+                            'preferredcodec': 'mp3',
+                            'preferredquality': target_quality,
+                        }
+                    ],
+                })
+            else:
+                # Preferisci formati progressivi MP4 quando possibile
+                opts['format'] = f"bestvideo[ext=mp4][vcodec^=avc1][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/" + opts['format']
             
             # Download con timeout
             with yt_dlp.YoutubeDL(opts) as ydl:
-                ydl.download([url])
+                try:
+                    ydl.download([url])
+                except Exception as e:
+                    # Fallback: prova audio-only veloce
+                    if option.get('type') != 'audio':
+                        fallback_audio = self.ydl_opts.copy()
+                        fallback_audio['outtmpl'] = os.path.join(user_dir, '%(title)s.%(ext)s')
+                        fallback_audio.update({
+                            'format': 'bestaudio/best',
+                            'postprocessors': [
+                                {
+                                    'key': 'FFmpegExtractAudio',
+                                    'preferredcodec': 'mp3',
+                                    'preferredquality': '192',
+                                }
+                            ],
+                        })
+                        with yt_dlp.YoutubeDL(fallback_audio) as ydl_audio:
+                            ydl_audio.download([url])
                 
                 # Trova il file scaricato
                 for file in os.listdir(user_dir):
