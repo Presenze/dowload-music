@@ -83,9 +83,9 @@ class DownloadManager:
                                 'quality': fmt.get('abr', 0)
                             })
                     
-                    # Sort by quality (highest first)
-                    video_formats.sort(key=lambda x: x['quality'], reverse=True)
-                    audio_formats.sort(key=lambda x: x['quality'], reverse=True)
+                    # Sort by quality (highest first) - gestisci None values
+                    video_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
+                    audio_formats.sort(key=lambda x: x['quality'] or 0, reverse=True)
                     
                     # Add best options first
                     options.extend(video_formats[:5])  # Top 5 video formats

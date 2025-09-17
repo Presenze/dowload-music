@@ -1,10 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Carica variabili d'ambiente da file
+load_dotenv('bot_config.env')
+load_dotenv()  # Carica anche da .env se esiste
 
 # Bot Configuration
-BOT_TOKEN = os.getenv('BOT_TOKEN') or 'TOKEN HERE'
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+# Debug: mostra il token caricato (solo per debug locale)
+if not BOT_TOKEN and os.getenv('DEBUG_BOT'):
+    print("❌ BOT_TOKEN non trovato nelle variabili d'ambiente!")
+    print("Usa: set BOT_TOKEN=7576082688:AAGJz-v5NG8QGKCezBA5qlhI3lYiatsgRd8")
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit for Telegram
 DOWNLOAD_DIR = "downloads"
 
