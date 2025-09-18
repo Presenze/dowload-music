@@ -1,4 +1,4 @@
-v2.0.0 - Clean Requirements Fix
+v3.0.0 - Force Complete Rebuild - Fix sqlite3 Error
 - Removed ALL problematic packages
 - Railway compatible requirements only
 - YouTube Revolution Bypass active
