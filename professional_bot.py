@@ -278,6 +278,9 @@ For urgent issues, contact the administrator.
             await self._handle_url(message, context, lang)
         elif message.document or message.photo or message.video or message.audio:
             await self._handle_file(message, context, lang)
+        elif message.text:
+            # Gestisce messaggi di ricerca
+            await self._handle_search_message(message, context, lang)
         else:
             await message.reply_text(
                 MESSAGES['help'][lang],
@@ -450,6 +453,93 @@ For urgent issues, contact the administrator.
             parse_mode='Markdown'
         )
     
+    async def _handle_search_message(self, message, context, lang):
+        """Gestisce messaggi di ricerca"""
+        user_id = message.from_user.id
+        text = message.text.strip()
+        
+        # Controlla se l'utente ha cliccato su un tasto di ricerca
+        if user_id in self.user_sessions:
+            session = self.user_sessions[user_id]
+            
+            # Se l'utente ha cliccato su ricerca musica
+            if 'search_type' in session and session['search_type'] == 'music':
+                await message.reply_text(f"🔍 Cerco musica per: **{text}**...")
+                results = await self.search_generator.search_music(text, 10)
+                if results:
+                    message_text = self.search_generator.format_search_results(results, "musica")
+                    await message.reply_text(message_text, parse_mode='Markdown')
+                else:
+                    await message.reply_text(f"❌ Nessuna musica trovata per: **{text}**")
+                # Reset search type
+                session.pop('search_type', None)
+                return
+            
+            # Se l'utente ha cliccato su ricerca video
+            elif 'search_type' in session and session['search_type'] == 'video':
+                await message.reply_text(f"🔍 Cerco video per: **{text}**...")
+                results = await self.search_generator.search_videos(text, 10)
+                if results:
+                    message_text = self.search_generator.format_search_results(results, "video")
+                    await message.reply_text(message_text, parse_mode='Markdown')
+                else:
+                    await message.reply_text(f"❌ Nessun video trovato per: **{text}**")
+                # Reset search type
+                session.pop('search_type', None)
+                return
+            
+            # Se l'utente ha cliccato su crea logo
+            elif 'search_type' in session and session['search_type'] == 'logo':
+                await message.reply_text(f"🎨 Creo logo per: **{text}**...")
+                logo_url = await self.search_generator.generate_logo(text, "modern")
+                if logo_url:
+                    await message.reply_photo(
+                        photo=logo_url,
+                        caption=f"🎨 **Logo creato!**\n\nTesto: **{text}**\n\n💡 *Logo generato con stile moderno*"
+                    )
+                else:
+                    await message.reply_text("❌ Errore durante la creazione del logo.")
+                # Reset search type
+                session.pop('search_type', None)
+                return
+            
+            # Se l'utente ha cliccato su crea immagine
+            elif 'search_type' in session and session['search_type'] == 'image':
+                await message.reply_text(f"🖼️ Creo immagine per: **{text}**...")
+                image_url = await self.search_generator.generate_image(text, "artistic")
+                if image_url:
+                    await message.reply_photo(
+                        photo=image_url,
+                        caption=f"🖼️ **Immagine creata!**\n\nPrompt: **{text}**\n\n💡 *Immagine generata con AI*"
+                    )
+                else:
+                    await message.reply_text("❌ Errore durante la creazione dell'immagine.")
+                # Reset search type
+                session.pop('search_type', None)
+                return
+            
+            # Se l'utente ha cliccato su immagine con testo
+            elif 'search_type' in session and session['search_type'] == 'text_image':
+                await message.reply_text(f"📝 Creo immagine con testo: **{text}**...")
+                image_url = await self.search_generator.create_text_image(text, "blue", "white")
+                if image_url:
+                    await message.reply_photo(
+                        photo=image_url,
+                        caption=f"📝 **Immagine con testo creata!**\n\nTesto: **{text}**\n\n💡 *Immagine personalizzata*"
+                    )
+                else:
+                    await message.reply_text("❌ Errore durante la creazione dell'immagine.")
+                # Reset search type
+                session.pop('search_type', None)
+                return
+        
+        # Se non è una ricerca, mostra messaggio di aiuto
+        help_text = {
+            'it': "❓ **Come usare il bot:**\n\n🔗 **Per scaricare:** Invia un link\n🔍 **Per cercare:** Usa i tasti del menu\n\n📖 Usa /help per la guida completa",
+            'en': "❓ **How to use the bot:**\n\n🔗 **To download:** Send a link\n🔍 **To search:** Use menu buttons\n\n📖 Use /help for complete guide"
+        }
+        await message.reply_text(help_text[lang], parse_mode='Markdown')
+    
     async def search_music_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Comando per cercare musica"""
         try:
@@ -575,12 +665,18 @@ For urgent issues, contact the administrator.
         query = update.callback_query
         await query.answer()
         
+        user_id = query.from_user.id
+        if user_id not in self.user_sessions:
+            self.user_sessions[user_id] = {}
+        
         if query.data == "search_music":
+            self.user_sessions[user_id]['search_type'] = 'music'
             await query.edit_message_text(
                 "🎵 **Ricerca Musica**\n\nInvia il nome della canzone o artista che vuoi cercare.\n\nEsempio: `Ed Sheeran Shape of You`",
                 parse_mode='Markdown'
             )
         elif query.data == "search_video":
+            self.user_sessions[user_id]['search_type'] = 'video'
             await query.edit_message_text(
                 "🎬 **Ricerca Video**\n\nInvia il tema o argomento che vuoi cercare.\n\nEsempio: `tutorial cucina italiana`",
                 parse_mode='Markdown'
@@ -591,12 +687,18 @@ For urgent issues, contact the administrator.
         query = update.callback_query
         await query.answer()
         
+        user_id = query.from_user.id
+        if user_id not in self.user_sessions:
+            self.user_sessions[user_id] = {}
+        
         if query.data == "create_logo":
+            self.user_sessions[user_id]['search_type'] = 'logo'
             await query.edit_message_text(
                 "🎨 **Crea Logo**\n\nInvia il testo che vuoi nel logo.\n\nEsempio: `La Mia Azienda`",
                 parse_mode='Markdown'
             )
         elif query.data == "create_image":
+            self.user_sessions[user_id]['search_type'] = 'image'
             await query.edit_message_text(
                 "🖼️ **Genera Immagine**\n\nInvia una descrizione dell'immagine che vuoi creare.\n\nEsempio: `gatto che suona la chitarra`",
                 parse_mode='Markdown'
@@ -607,6 +709,11 @@ For urgent issues, contact the administrator.
         query = update.callback_query
         await query.answer()
         
+        user_id = query.from_user.id
+        if user_id not in self.user_sessions:
+            self.user_sessions[user_id] = {}
+        
+        self.user_sessions[user_id]['search_type'] = 'text_image'
         await query.edit_message_text(
             "📝 **Crea Immagine con Testo**\n\nInvia il testo che vuoi nell'immagine.\n\nEsempio: `Benvenuti`",
             parse_mode='Markdown'
