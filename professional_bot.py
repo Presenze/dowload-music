@@ -728,13 +728,22 @@ For urgent issues, contact the administrator.
         await query.edit_message_text(help_text, parse_mode='Markdown')
     
     def run(self):
-        """Avvia il bot"""
+        """Avvia il bot con gestione conflitti"""
         if not BOT_TOKEN:
             logger.error("BOT_TOKEN not found! Please set it in your environment variables.")
             return
         
-        # Crea applicazione
+        # Crea applicazione con gestione conflitti
         application = Application.builder().token(BOT_TOKEN).build()
+        
+        # Configura polling per evitare conflitti
+        application.bot_data['get_updates_request'] = {
+            'timeout': 30,
+            'read_timeout': 30,
+            'write_timeout': 30,
+            'connect_timeout': 30,
+            'pool_timeout': 30,
+        }
         
         # Aggiungi handlers
         application.add_handler(CommandHandler("start", self.start_command))
@@ -757,9 +766,30 @@ For urgent issues, contact the administrator.
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
         application.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO | filters.VIDEO | filters.AUDIO, self.handle_message))
         
-        # Avvia bot
+        # Avvia bot con retry per conflitti
         logger.info("🚀 Starting Professional Giglio Download Unlimited Bot...")
-        application.run_polling()
+        
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                application.run_polling(
+                    timeout=30,
+                    read_timeout=30,
+                    write_timeout=30,
+                    connect_timeout=30,
+                    pool_timeout=30,
+                    drop_pending_updates=True  # Drop pending updates to avoid conflicts
+                )
+                break
+            except Exception as e:
+                if "Conflict" in str(e) and attempt < max_retries - 1:
+                    logger.warning(f"Bot conflict detected (attempt {attempt + 1}/{max_retries}). Retrying in 5 seconds...")
+                    import time
+                    time.sleep(5)
+                    continue
+                else:
+                    logger.error(f"Failed to start bot after {max_retries} attempts: {e}")
+                    raise
 
 if __name__ == "__main__":
     bot = ProfessionalBot()

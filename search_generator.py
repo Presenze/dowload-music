@@ -23,47 +23,94 @@ class SearchGenerator:
         self.download_dir = "downloads"
         os.makedirs(self.download_dir, exist_ok=True)
         
-        # Configurazione per ricerca YouTube
+        # Configurazione per ricerca YouTube - Ultra robusta
         self.search_opts = {
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True,
             'default_search': 'ytsearch',
+            'ignoreerrors': True,
+            'no_check_certificate': True,
+            'prefer_insecure': True,
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android_music', 'android_creator', 'android'],
-                    'skip': ['translated_subs', 'dash', 'hls'],
+                    'player_client': ['android_music', 'android_creator', 'android', 'ios', 'web'],
+                    'skip': ['translated_subs', 'dash', 'hls', 'live_chat'],
+                    'include_live_chat': False,
                 }
             },
         }
     
     async def search_youtube(self, query: str, max_results: int = 10) -> List[Dict]:
-        """Cerca video su YouTube"""
-        try:
-            results = []
-            search_query = f"ytsearch{max_results}:{query}"
-            
-            with yt_dlp.YoutubeDL(self.search_opts) as ydl:
-                search_results = ydl.extract_info(search_query, download=False)
+        """Cerca video su YouTube con fallback robusto"""
+        results = []
+        
+        # Prova diverse configurazioni di ricerca
+        search_configs = [
+            {'default_search': 'ytsearch', 'extract_flat': True},
+            {'default_search': 'ytsearch5', 'extract_flat': True},
+            {'default_search': 'ytsearch10', 'extract_flat': True},
+        ]
+        
+        for config in search_configs:
+            try:
+                opts = self.search_opts.copy()
+                opts.update(config)
+                search_query = f"ytsearch{max_results}:{query}"
                 
-                if search_results and 'entries' in search_results:
-                    for entry in search_results['entries']:
-                        if entry:
-                            results.append({
-                                'id': entry.get('id', ''),
-                                'title': entry.get('title', 'Senza titolo'),
-                                'uploader': entry.get('uploader', 'Sconosciuto'),
-                                'duration': entry.get('duration', 0),
-                                'view_count': entry.get('view_count', 0),
-                                'url': f"https://youtube.com/watch?v={entry.get('id', '')}",
-                                'thumbnail': entry.get('thumbnail', ''),
-                            })
-            
-            return results
-            
-        except Exception as e:
-            logger.error(f"Search error: {e}")
-            return []
+                with yt_dlp.YoutubeDL(opts) as ydl:
+                    search_results = ydl.extract_info(search_query, download=False)
+                    
+                    if search_results and 'entries' in search_results:
+                        for entry in search_results['entries']:
+                            if entry and entry.get('id'):
+                                results.append({
+                                    'id': entry.get('id', ''),
+                                    'title': entry.get('title', 'Senza titolo'),
+                                    'uploader': entry.get('uploader', 'Sconosciuto'),
+                                    'duration': entry.get('duration', 0),
+                                    'view_count': entry.get('view_count', 0),
+                                    'url': f"https://youtube.com/watch?v={entry.get('id', '')}",
+                                    'thumbnail': entry.get('thumbnail', ''),
+                                })
+                        
+                        if results:  # Se abbiamo risultati, esci
+                            break
+                            
+            except Exception as e:
+                logger.warning(f"Search config failed: {e}")
+                continue
+        
+        # Se ancora non abbiamo risultati, prova ricerca semplificata
+        if not results:
+            try:
+                simple_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extract_flat': True,
+                    'ignoreerrors': True,
+                }
+                search_query = f"ytsearch{max_results}:{query}"
+                
+                with yt_dlp.YoutubeDL(simple_opts) as ydl:
+                    search_results = ydl.extract_info(search_query, download=False)
+                    
+                    if search_results and 'entries' in search_results:
+                        for entry in search_results['entries']:
+                            if entry and entry.get('id'):
+                                results.append({
+                                    'id': entry.get('id', ''),
+                                    'title': entry.get('title', 'Senza titolo'),
+                                    'uploader': entry.get('uploader', 'Sconosciuto'),
+                                    'duration': entry.get('duration', 0),
+                                    'view_count': entry.get('view_count', 0),
+                                    'url': f"https://youtube.com/watch?v={entry.get('id', '')}",
+                                    'thumbnail': entry.get('thumbnail', ''),
+                                })
+            except Exception as e:
+                logger.error(f"Simple search also failed: {e}")
+        
+        return results[:max_results]  # Limita risultati
     
     async def search_music(self, query: str, max_results: int = 10) -> List[Dict]:
         """Cerca musica specifica su YouTube"""
