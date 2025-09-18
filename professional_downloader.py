@@ -36,11 +36,12 @@ class ProfessionalDownloader:
             'extractor_retries': 3,
             'fragment_retries': 3,
             'retries': 3,
-            'socket_timeout': 30,
-            'http_chunk_size': 2097152,  # 2MB chunks per velocità
-            'concurrent_fragment_downloads': 8,  # 8 download paralleli
-            'fragment_retries': 3,
+            'socket_timeout': 15,  # Timeout più veloce
+            'http_chunk_size': 4194304,  # 4MB chunks per velocità massima
+            'concurrent_fragment_downloads': 16,  # 16 download paralleli
+            'fragment_retries': 2,  # Meno retry per velocità
             'skip_unavailable_fragments': True,
+            'retries': 2,  # Meno retry totali
             # Configurazioni avanzate
             'prefer_insecure': False,
             'geo_bypass': True,
@@ -335,7 +336,7 @@ class ProfessionalDownloader:
                     target_quality = '128'
 
                 opts.update({
-                    'format': option.get('ydl_format', 'bestaudio/best'),
+                    'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
                     'postprocessors': [
                         {
                             'key': 'FFmpegExtractAudio',
@@ -343,6 +344,8 @@ class ProfessionalDownloader:
                             'preferredquality': target_quality,
                         }
                     ],
+                    'ffmpeg_location': '/usr/bin/ffmpeg',
+                    'prefer_ffmpeg': True,
                 })
             else:
                 # Preferisci formati progressivi MP4 quando possibile
@@ -353,12 +356,13 @@ class ProfessionalDownloader:
                 try:
                     ydl.download([url])
                 except Exception as e:
+                    logger.warning(f"Download failed: {e}, trying fallback...")
                     # Fallback: prova audio-only veloce
                     if option.get('type') != 'audio':
                         fallback_audio = self.ydl_opts.copy()
                         fallback_audio['outtmpl'] = os.path.join(user_dir, '%(title)s.%(ext)s')
                         fallback_audio.update({
-                            'format': 'bestaudio/best',
+                            'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best',
                             'postprocessors': [
                                 {
                                     'key': 'FFmpegExtractAudio',
@@ -366,6 +370,8 @@ class ProfessionalDownloader:
                                     'preferredquality': '192',
                                 }
                             ],
+                            'ffmpeg_location': '/usr/bin/ffmpeg',
+                            'prefer_ffmpeg': True,
                         })
                         with yt_dlp.YoutubeDL(fallback_audio) as ydl_audio:
                             ydl_audio.download([url])
