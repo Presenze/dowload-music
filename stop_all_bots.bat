@@ -1,18 +1,7 @@
 @echo off
-echo 🛑 Fermando tutte le istanze del bot...
-
-echo.
-echo 🔍 Cercando processi Python...
-tasklist | findstr python
-
-echo.
-echo ⚡ Terminando tutti i processi Python...
+echo Stopping all Python processes to resolve bot conflicts...
 taskkill /f /im python.exe 2>nul
-taskkill /f /im python3.exe 2>nul
-
-echo.
-echo ✅ Tutte le istanze del bot sono state fermate!
-echo.
-echo 🚀 Ora il bot su Railway dovrebbe funzionare senza conflitti!
-echo.
+taskkill /f /im pythonw.exe 2>nul
+echo All Python processes stopped.
+echo You can now start the bot without conflicts.
 pause

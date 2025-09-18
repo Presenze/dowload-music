@@ -41,7 +41,13 @@ class ProfessionalBot:
         
         keyboard = [
             [InlineKeyboardButton("🇮🇹 Italiano", callback_data="lang_it")],
-            [InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")]
+            [InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")],
+            [InlineKeyboardButton("🔍 Ricerca Musica", callback_data="search_music")],
+            [InlineKeyboardButton("🎬 Ricerca Video", callback_data="search_video")],
+            [InlineKeyboardButton("🎨 Crea Logo", callback_data="create_logo")],
+            [InlineKeyboardButton("🖼️ Genera Immagine", callback_data="create_image")],
+            [InlineKeyboardButton("📝 Immagine con Testo", callback_data="text_image")],
+            [InlineKeyboardButton("❓ Aiuto Ricerca", callback_data="search_help")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -50,6 +56,11 @@ class ProfessionalBot:
 *Il migliore downloader in circolazione!*
 
 🌍 **Scegli la tua lingua / Choose your language:**
+
+🔍 **NUOVE FUNZIONI:**
+• Ricerca musica e video
+• Generazione logo e immagini
+• Creazione contenuti personalizzati
         """
         
         await update.message.reply_text(
@@ -559,6 +570,56 @@ For urgent issues, contact the administrator.
             logger.error(f"Search help error: {e}")
             await update.message.reply_text("❌ Errore durante il caricamento dell'aiuto.")
     
+    async def search_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Callback per tasti di ricerca"""
+        query = update.callback_query
+        await query.answer()
+        
+        if query.data == "search_music":
+            await query.edit_message_text(
+                "🎵 **Ricerca Musica**\n\nInvia il nome della canzone o artista che vuoi cercare.\n\nEsempio: `Ed Sheeran Shape of You`",
+                parse_mode='Markdown'
+            )
+        elif query.data == "search_video":
+            await query.edit_message_text(
+                "🎬 **Ricerca Video**\n\nInvia il tema o argomento che vuoi cercare.\n\nEsempio: `tutorial cucina italiana`",
+                parse_mode='Markdown'
+            )
+    
+    async def create_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Callback per tasti di creazione"""
+        query = update.callback_query
+        await query.answer()
+        
+        if query.data == "create_logo":
+            await query.edit_message_text(
+                "🎨 **Crea Logo**\n\nInvia il testo che vuoi nel logo.\n\nEsempio: `La Mia Azienda`",
+                parse_mode='Markdown'
+            )
+        elif query.data == "create_image":
+            await query.edit_message_text(
+                "🖼️ **Genera Immagine**\n\nInvia una descrizione dell'immagine che vuoi creare.\n\nEsempio: `gatto che suona la chitarra`",
+                parse_mode='Markdown'
+            )
+    
+    async def text_image_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Callback per immagine con testo"""
+        query = update.callback_query
+        await query.answer()
+        
+        await query.edit_message_text(
+            "📝 **Crea Immagine con Testo**\n\nInvia il testo che vuoi nell'immagine.\n\nEsempio: `Benvenuti`",
+            parse_mode='Markdown'
+        )
+    
+    async def search_help_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Callback per aiuto ricerca"""
+        query = update.callback_query
+        await query.answer()
+        
+        help_text = self.search_generator.get_search_help()
+        await query.edit_message_text(help_text, parse_mode='Markdown')
+    
     def run(self):
         """Avvia il bot"""
         if not BOT_TOKEN:
@@ -582,6 +643,10 @@ For urgent issues, contact the administrator.
         application.add_handler(CommandHandler("search_help", self.search_help_command))
         application.add_handler(CallbackQueryHandler(self.language_callback, pattern="^lang_"))
         application.add_handler(CallbackQueryHandler(self.download_callback, pattern="^download_"))
+        application.add_handler(CallbackQueryHandler(self.search_callback, pattern="^search_"))
+        application.add_handler(CallbackQueryHandler(self.create_callback, pattern="^create_"))
+        application.add_handler(CallbackQueryHandler(self.text_image_callback, pattern="^text_image"))
+        application.add_handler(CallbackQueryHandler(self.search_help_callback, pattern="^search_help"))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
         application.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO | filters.VIDEO | filters.AUDIO, self.handle_message))
         
