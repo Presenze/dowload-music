@@ -1,27 +1,9 @@
-# Core Bot Framework
+# Minimal Requirements for Railway
 python-telegram-bot==20.7
-
-# Download Engine
 yt-dlp==2025.9.5
-
-# HTTP Support
 requests==2.31.0
 aiohttp==3.9.1
 aiofiles==23.2.1
-
-# Configuration
 python-dotenv==1.0.0
-
-# Audio/Video Processing
 mutagen==1.47.0
-
-# Logging
 colorama==0.4.6
-
-# YouTube Bypass (Essential only)
-cryptography==41.0.7
-certifi==2023.11.17
-urllib3==2.1.0
-
-# Network
-fake-useragent==1.4.0

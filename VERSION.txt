@@ -1,4 +1,4 @@
-v3.0.0 - Force Complete Rebuild - Fix sqlite3 Error
+v4.0.0 - Ultra Minimal Requirements - Fix All Build Errors
 - Removed ALL problematic packages
 - Railway compatible requirements only
 - YouTube Revolution Bypass active
