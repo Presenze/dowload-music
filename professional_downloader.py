@@ -51,21 +51,25 @@ class ProfessionalDownloader:
             'ffmpeg_location': '/usr/bin/ffmpeg',
             'merge_output_format': 'mp4',
             'prefer_ffmpeg': True,
-            # YouTube specific - Aggressive bypass
+            # YouTube specific - ULTRA Aggressive bypass
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'web', 'ios', 'android_music', 'android_creator'],
-                    'skip': ['translated_subs', 'dash', 'hls'],
+                    'player_client': ['android_music', 'android_creator', 'android', 'ios', 'web'],
+                    'skip': ['translated_subs', 'dash', 'hls', 'live_chat'],
                     'comment_sort': ['top'],
                     'max_comments': [0],
+                    'include_live_chat': False,
                 }
             },
-            # Bypass authentication
+            # ULTRA Bypass authentication
             'cookiesfrombrowser': None,
             'no_check_certificate': True,
             'prefer_insecure': True,
-            'sleep_interval': 1,
-            'max_sleep_interval': 5,
+            'sleep_interval': 0.5,
+            'max_sleep_interval': 3,
+            'age_limit': 0,
+            'geo_bypass_country': 'US',
+            'geo_bypass_ip_block': None,
         }
         
         # Piattaforme supportate con configurazioni specifiche

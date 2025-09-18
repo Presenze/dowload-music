@@ -11,6 +11,7 @@ import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from professional_downloader import ProfessionalDownloader
+from search_generator import SearchGenerator
 from config import BOT_TOKEN, MESSAGES, MAX_FILE_SIZE
 from utils import format_file_size, sanitize_filename
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 class ProfessionalBot:
     def __init__(self):
         self.downloader = ProfessionalDownloader()
+        self.search_generator = SearchGenerator()
         self.user_sessions = {}  # Store user sessions
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -437,6 +439,126 @@ For urgent issues, contact the administrator.
             parse_mode='Markdown'
         )
     
+    async def search_music_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando per cercare musica"""
+        try:
+            query = ' '.join(context.args) if context.args else None
+            if not query:
+                await update.message.reply_text("🎵 **Ricerca Musica**\n\nUsa: `/search_music [nome canzone o artista]`\n\nEsempio: `/search_music Ed Sheeran Shape of You`")
+                return
+            
+            await update.message.reply_text(f"🔍 Cerco musica per: **{query}**...")
+            
+            results = await self.search_generator.search_music(query, 10)
+            if results:
+                message = self.search_generator.format_search_results(results, "musica")
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(f"❌ Nessuna musica trovata per: **{query}**")
+                
+        except Exception as e:
+            logger.error(f"Search music error: {e}")
+            await update.message.reply_text("❌ Errore durante la ricerca musica.")
+    
+    async def search_video_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando per cercare video"""
+        try:
+            query = ' '.join(context.args) if context.args else None
+            if not query:
+                await update.message.reply_text("🎬 **Ricerca Video**\n\nUsa: `/search_video [tema o argomento]`\n\nEsempio: `/search_video tutorial cucina`")
+                return
+            
+            await update.message.reply_text(f"🔍 Cerco video per: **{query}**...")
+            
+            results = await self.search_generator.search_videos(query, 10)
+            if results:
+                message = self.search_generator.format_search_results(results, "video")
+                await update.message.reply_text(message, parse_mode='Markdown')
+            else:
+                await update.message.reply_text(f"❌ Nessun video trovato per: **{query}**")
+                
+        except Exception as e:
+            logger.error(f"Search video error: {e}")
+            await update.message.reply_text("❌ Errore durante la ricerca video.")
+    
+    async def create_logo_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando per creare logo"""
+        try:
+            text = ' '.join(context.args) if context.args else None
+            if not text:
+                await update.message.reply_text("🎨 **Crea Logo**\n\nUsa: `/create_logo [testo del logo]`\n\nEsempio: `/create_logo La Mia Azienda`")
+                return
+            
+            await update.message.reply_text(f"🎨 Creo logo per: **{text}**...")
+            
+            logo_url = await self.search_generator.generate_logo(text, "modern")
+            if logo_url:
+                await update.message.reply_photo(
+                    photo=logo_url,
+                    caption=f"🎨 **Logo creato!**\n\nTesto: **{text}**\n\n💡 *Logo generato con stile moderno*"
+                )
+            else:
+                await update.message.reply_text("❌ Errore durante la creazione del logo.")
+                
+        except Exception as e:
+            logger.error(f"Create logo error: {e}")
+            await update.message.reply_text("❌ Errore durante la creazione del logo.")
+    
+    async def create_image_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando per creare immagine"""
+        try:
+            prompt = ' '.join(context.args) if context.args else None
+            if not prompt:
+                await update.message.reply_text("🖼️ **Crea Immagine**\n\nUsa: `/create_image [descrizione]`\n\nEsempio: `/create_image gatto che suona la chitarra`")
+                return
+            
+            await update.message.reply_text(f"🖼️ Creo immagine per: **{prompt}**...")
+            
+            image_url = await self.search_generator.generate_image(prompt, "artistic")
+            if image_url:
+                await update.message.reply_photo(
+                    photo=image_url,
+                    caption=f"🖼️ **Immagine creata!**\n\nPrompt: **{prompt}**\n\n💡 *Immagine generata con AI*"
+                )
+            else:
+                await update.message.reply_text("❌ Errore durante la creazione dell'immagine.")
+                
+        except Exception as e:
+            logger.error(f"Create image error: {e}")
+            await update.message.reply_text("❌ Errore durante la creazione dell'immagine.")
+    
+    async def text_image_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando per creare immagine con testo"""
+        try:
+            text = ' '.join(context.args) if context.args else None
+            if not text:
+                await update.message.reply_text("📝 **Crea Immagine con Testo**\n\nUsa: `/text_image [testo]`\n\nEsempio: `/text_image Benvenuti`")
+                return
+            
+            await update.message.reply_text(f"📝 Creo immagine con testo: **{text}**...")
+            
+            image_url = await self.search_generator.create_text_image(text, "blue", "white")
+            if image_url:
+                await update.message.reply_photo(
+                    photo=image_url,
+                    caption=f"📝 **Immagine con testo creata!**\n\nTesto: **{text}**\n\n💡 *Immagine personalizzata*"
+                )
+            else:
+                await update.message.reply_text("❌ Errore durante la creazione dell'immagine.")
+                
+        except Exception as e:
+            logger.error(f"Text image error: {e}")
+            await update.message.reply_text("❌ Errore durante la creazione dell'immagine.")
+    
+    async def search_help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Comando di aiuto per le funzioni di ricerca"""
+        try:
+            help_text = self.search_generator.get_search_help()
+            await update.message.reply_text(help_text, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Search help error: {e}")
+            await update.message.reply_text("❌ Errore durante il caricamento dell'aiuto.")
+    
     def run(self):
         """Avvia il bot"""
         if not BOT_TOKEN:
@@ -450,6 +572,14 @@ For urgent issues, contact the administrator.
         application.add_handler(CommandHandler("start", self.start_command))
         application.add_handler(CommandHandler("help", self.help_command))
         application.add_handler(CommandHandler("support", self.support_command))
+        
+        # Nuovi comandi di ricerca e generazione
+        application.add_handler(CommandHandler("search_music", self.search_music_command))
+        application.add_handler(CommandHandler("search_video", self.search_video_command))
+        application.add_handler(CommandHandler("create_logo", self.create_logo_command))
+        application.add_handler(CommandHandler("create_image", self.create_image_command))
+        application.add_handler(CommandHandler("text_image", self.text_image_command))
+        application.add_handler(CommandHandler("search_help", self.search_help_command))
         application.add_handler(CallbackQueryHandler(self.language_callback, pattern="^lang_"))
         application.add_handler(CallbackQueryHandler(self.download_callback, pattern="^download_"))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
