@@ -50,27 +50,35 @@ class ProfessionalDownloader:
             'ffmpeg_location': '/usr/bin/ffmpeg',
             'merge_output_format': 'mp4',
             'prefer_ffmpeg': True,
-            # YouTube specific
+            # YouTube specific - Aggressive bypass
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'web', 'ios'],
-                    'skip': ['translated_subs'],
+                    'player_client': ['android', 'web', 'ios', 'android_music', 'android_creator'],
+                    'skip': ['translated_subs', 'dash', 'hls'],
+                    'comment_sort': ['top'],
+                    'max_comments': [0],
                 }
             },
+            # Bypass authentication
+            'cookiesfrombrowser': None,
+            'no_check_certificate': True,
+            'prefer_insecure': True,
+            'sleep_interval': 1,
+            'max_sleep_interval': 5,
         }
         
         # Piattaforme supportate con configurazioni specifiche
         self.platforms = {
             'youtube': {
                 'domains': ['youtube.com', 'youtu.be', 'music.youtube.com'],
-                'formats': ['best[height<=1080]+bestaudio', 'best[height<=720]+bestaudio', 'bestaudio'],
+                'formats': ['best[height<=1080]/best[height<=720]/best[height<=480]/best', 'bestaudio[abr<=320]/bestaudio[abr<=192]/bestaudio'],
                 'quality_options': [
-                    {'id': '1080p', 'name': '🎬 Video 4K (1080p)', 'format': 'best[height<=1080]+bestaudio'},
-                    {'id': '720p', 'name': '🎥 Video HD (720p)', 'format': 'best[height<=720]+bestaudio'},
-                    {'id': '480p', 'name': '📱 Video (480p)', 'format': 'best[height<=480]+bestaudio'},
-                    {'id': 'audio_320', 'name': '🎵 MP3 Premium (320kbps)', 'format': 'bestaudio[abr<=320]'},
-                    {'id': 'audio_192', 'name': '🎵 MP3 Qualità (192kbps)', 'format': 'bestaudio[abr<=192]'},
-                    {'id': 'audio_128', 'name': '⚡ MP3 Veloce (128kbps)', 'format': 'worstaudio[abr>=128]'},
+                    {'id': '1080p', 'name': '🎬 Video 4K (1080p)', 'format': 'best[height<=1080]/best[height<=720]/best[height<=480]/best'},
+                    {'id': '720p', 'name': '🎥 Video HD (720p)', 'format': 'best[height<=720]/best[height<=480]/best'},
+                    {'id': '480p', 'name': '📱 Video (480p)', 'format': 'best[height<=480]/best'},
+                    {'id': 'audio_320', 'name': '🎵 MP3 Premium (320kbps)', 'format': 'bestaudio[abr<=320]/bestaudio[abr<=192]/bestaudio'},
+                    {'id': 'audio_192', 'name': '🎵 MP3 Qualità (192kbps)', 'format': 'bestaudio[abr<=192]/bestaudio'},
+                    {'id': 'audio_128', 'name': '⚡ MP3 Veloce (128kbps)', 'format': 'bestaudio/worstaudio[abr>=128]'},
                 ]
             },
             'instagram': {
