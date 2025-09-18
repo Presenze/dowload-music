@@ -666,21 +666,27 @@ For urgent issues, contact the administrator.
         await query.answer()
         
         user_id = query.from_user.id
+        logger.info(f"Search callback triggered: {query.data} for user {user_id}")
+        
         if user_id not in self.user_sessions:
             self.user_sessions[user_id] = {}
         
-        if query.data == "search_music":
-            self.user_sessions[user_id]['search_type'] = 'music'
-            await query.edit_message_text(
-                "🎵 **Ricerca Musica**\n\nInvia il nome della canzone o artista che vuoi cercare.\n\nEsempio: `Ed Sheeran Shape of You`",
-                parse_mode='Markdown'
-            )
-        elif query.data == "search_video":
-            self.user_sessions[user_id]['search_type'] = 'video'
-            await query.edit_message_text(
-                "🎬 **Ricerca Video**\n\nInvia il tema o argomento che vuoi cercare.\n\nEsempio: `tutorial cucina italiana`",
-                parse_mode='Markdown'
-            )
+        try:
+            if query.data == "search_music":
+                self.user_sessions[user_id]['search_type'] = 'music'
+                await query.edit_message_text(
+                    "🎵 **Ricerca Musica**\n\nInvia il nome della canzone o artista che vuoi cercare.\n\nEsempio: `Ed Sheeran Shape of You`",
+                    parse_mode='Markdown'
+                )
+            elif query.data == "search_video":
+                self.user_sessions[user_id]['search_type'] = 'video'
+                await query.edit_message_text(
+                    "🎬 **Ricerca Video**\n\nInvia il tema o argomento che vuoi cercare.\n\nEsempio: `tutorial cucina italiana`",
+                    parse_mode='Markdown'
+                )
+        except Exception as e:
+            logger.error(f"Error in search_callback: {e}")
+            await query.edit_message_text("❌ Errore durante l'elaborazione della richiesta.")
     
     async def create_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Callback per tasti di creazione"""
@@ -688,21 +694,27 @@ For urgent issues, contact the administrator.
         await query.answer()
         
         user_id = query.from_user.id
+        logger.info(f"Create callback triggered: {query.data} for user {user_id}")
+        
         if user_id not in self.user_sessions:
             self.user_sessions[user_id] = {}
         
-        if query.data == "create_logo":
-            self.user_sessions[user_id]['search_type'] = 'logo'
-            await query.edit_message_text(
-                "🎨 **Crea Logo**\n\nInvia il testo che vuoi nel logo.\n\nEsempio: `La Mia Azienda`",
-                parse_mode='Markdown'
-            )
-        elif query.data == "create_image":
-            self.user_sessions[user_id]['search_type'] = 'image'
-            await query.edit_message_text(
-                "🖼️ **Genera Immagine**\n\nInvia una descrizione dell'immagine che vuoi creare.\n\nEsempio: `gatto che suona la chitarra`",
-                parse_mode='Markdown'
-            )
+        try:
+            if query.data == "create_logo":
+                self.user_sessions[user_id]['search_type'] = 'logo'
+                await query.edit_message_text(
+                    "🎨 **Crea Logo**\n\nInvia il testo che vuoi nel logo.\n\nEsempio: `La Mia Azienda`",
+                    parse_mode='Markdown'
+                )
+            elif query.data == "create_image":
+                self.user_sessions[user_id]['search_type'] = 'image'
+                await query.edit_message_text(
+                    "🖼️ **Genera Immagine**\n\nInvia una descrizione dell'immagine che vuoi creare.\n\nEsempio: `gatto che suona la chitarra`",
+                    parse_mode='Markdown'
+                )
+        except Exception as e:
+            logger.error(f"Error in create_callback: {e}")
+            await query.edit_message_text("❌ Errore durante l'elaborazione della richiesta.")
     
     async def text_image_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Callback per immagine con testo"""
@@ -710,22 +722,35 @@ For urgent issues, contact the administrator.
         await query.answer()
         
         user_id = query.from_user.id
+        logger.info(f"Text image callback triggered for user {user_id}")
+        
         if user_id not in self.user_sessions:
             self.user_sessions[user_id] = {}
         
-        self.user_sessions[user_id]['search_type'] = 'text_image'
-        await query.edit_message_text(
-            "📝 **Crea Immagine con Testo**\n\nInvia il testo che vuoi nell'immagine.\n\nEsempio: `Benvenuti`",
-            parse_mode='Markdown'
-        )
+        try:
+            self.user_sessions[user_id]['search_type'] = 'text_image'
+            await query.edit_message_text(
+                "📝 **Crea Immagine con Testo**\n\nInvia il testo che vuoi nell'immagine.\n\nEsempio: `Benvenuti`",
+                parse_mode='Markdown'
+            )
+        except Exception as e:
+            logger.error(f"Error in text_image_callback: {e}")
+            await query.edit_message_text("❌ Errore durante l'elaborazione della richiesta.")
     
     async def search_help_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Callback per aiuto ricerca"""
         query = update.callback_query
         await query.answer()
         
-        help_text = self.search_generator.get_search_help()
-        await query.edit_message_text(help_text, parse_mode='Markdown')
+        user_id = query.from_user.id
+        logger.info(f"Search help callback triggered for user {user_id}")
+        
+        try:
+            help_text = self.search_generator.get_search_help()
+            await query.edit_message_text(help_text, parse_mode='Markdown')
+        except Exception as e:
+            logger.error(f"Error in search_help_callback: {e}")
+            await query.edit_message_text("❌ Errore durante il caricamento dell'aiuto.")
     
     def run(self):
         """Avvia il bot con gestione conflitti"""
@@ -759,10 +784,10 @@ For urgent issues, contact the administrator.
         application.add_handler(CommandHandler("search_help", self.search_help_command))
         application.add_handler(CallbackQueryHandler(self.language_callback, pattern="^lang_"))
         application.add_handler(CallbackQueryHandler(self.download_callback, pattern="^download_"))
-        application.add_handler(CallbackQueryHandler(self.search_callback, pattern="^search_"))
-        application.add_handler(CallbackQueryHandler(self.create_callback, pattern="^create_"))
-        application.add_handler(CallbackQueryHandler(self.text_image_callback, pattern="^text_image"))
-        application.add_handler(CallbackQueryHandler(self.search_help_callback, pattern="^search_help"))
+        application.add_handler(CallbackQueryHandler(self.search_callback, pattern="^(search_music|search_video)$"))
+        application.add_handler(CallbackQueryHandler(self.create_callback, pattern="^(create_logo|create_image)$"))
+        application.add_handler(CallbackQueryHandler(self.text_image_callback, pattern="^text_image$"))
+        application.add_handler(CallbackQueryHandler(self.search_help_callback, pattern="^search_help$"))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
         application.add_handler(MessageHandler(filters.Document.ALL | filters.PHOTO | filters.VIDEO | filters.AUDIO, self.handle_message))
         
